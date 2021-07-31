@@ -109,29 +109,28 @@ def cli_test(compressed: str):
         )
         exit(-1)
 
-    for key in dictionary():
-        for n, i in enumerate(key):
-            try:
-                result = run(["7z", "t", "-p{}".format(i), compressed],
-                             stdout=DEVNULL,
-                             stderr=PIPE,
-                             encoding="utf-8")
-                print("{}: #{}#".format(n, i))
-                if result.returncode == 0:
-                    print("findout: --- #{}# ---".format(i))
-                    break
-                else:
-                    if "Wrong password" in result.stderr:
-                        continue
-                    else:
-                        print("driversdict: error - unknown error")
-                        print(result.stderr, file=stderr)
-                        break
-            except Exception as e:
-                print(e)
+    for n, key in enumerate(dictionary()):
+        try:
+            result = run(["7z", "t", f"-p{key}", compressed],
+                            stdout=DEVNULL,
+                            stderr=PIPE,
+                            encoding="utf-8")
+            print(f"{n}: #{key!r}#")
+            if result.returncode == 0:
+                print(f"findout: --- #{key!r}# ---")
                 break
-        else:
-            print("driversdict: warn - 未找到匹配的密码")
+            else:
+                if "Wrong password" in result.stderr:
+                    continue
+                else:
+                    print("driversdict: error - unknown error")
+                    print(result.stderr, file=stderr)
+                    break
+        except Exception as e:
+            print(e)
+            break
+    else:
+        print("driversdict: warn - 未找到匹配的密码")
 
 def cli_info():
     """向终端输出程序信息"""
