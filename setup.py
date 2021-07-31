@@ -23,7 +23,7 @@ cmdclass = {
 
 setup_kwargs = {
     'name': 'driversdict',
-    'version': '0.1.0',
+    'version': '0.1.1',
     'description': '查询、测试、记录「某些压缩包」的解压密码',
     'long_description': None,
     'author': 'zombie110year',

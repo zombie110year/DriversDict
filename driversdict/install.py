@@ -6,8 +6,15 @@ def post_install():
     home = Path.home()
     # 创建程序数据文件夹
     prog_home = home / ".local" / "share" / "driversdict"
-    prog_home.mkdir(parents=True, exist_ok=True)
+    if not prog_home.exists():
+        prog_home.mkdir(parents=True, exist_ok=True)
     # 复制数据
     dictionary_file = prog_home / "dictionary.txt"
-    dictionary_file.write_text("\n".join(pkg_dictionary()))
+    if dictionary_file.exists():
+        old = dictionary_file.read_text("utf-8").strip("\n").split("\n")
+        new = pkg_dictionary()
+        merged = sorted(list(set(old + new)))
+    else:
+        merged = pkg_dictionary()
+    dictionary_file.write_text("\n".join(merged))
     print(f"driversdict: 字典文件位于 {dictionary_file!s}")

@@ -27,7 +27,7 @@ def cli_main():
     args = parser.parse_args()
 
     if "test" == args.command:
-        cli_test(args.archive, args.dictionary)
+        cli_test(args.archive)
     elif "sort" == args.command:
         cli_sort(args.dictionary)
     elif "add" == args.command:
