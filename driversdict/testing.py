@@ -72,9 +72,13 @@ class Manager:
     def run(self):
         while True:
             try:
-                result = self.results.get(True, 60)
+                result = self.results.get(True, 3)
             except Empty:
-                return
+                # 如果所有线程都结束，则终止
+                if any([w.is_alive() for w in self.workers]):
+                    continue
+                else:
+                    return
             if result is not None:
                 for w in self.workers:
                     w.terminate()
