@@ -2,13 +2,14 @@ import json
 from argparse import ArgumentParser
 from hashlib import md5
 from pathlib import Path
-from subprocess import DEVNULL, PIPE, run
-from sys import exit, stderr, stdin
+from subprocess import PIPE, run
+from sys import exit, stdin
 from typing import *
 
 from driversdict.resource import dictionary
 
-from . import DICTIONARY, shell_encoding
+from . import DICTIONARY
+from .testing import testing_archive
 
 
 def cli_main():
@@ -112,26 +113,10 @@ def cli_test(compressed: str):
         exit(-1)
 
     for n, key in enumerate(dictionary()):
-        try:
-            result = run(["7z", "t", f"-p{key}", compressed],
-                            stdout=DEVNULL,
-                            stderr=PIPE)
-            print(f"{n}: #{key!r}#")
-            if result.returncode == 0:
-                print(f"findout: --- #{key!r}# ---")
-                break
-            else:
-                encoding = shell_encoding()
-                err_msg = result.stderr.decode(encoding)
-                if "Wrong password" in err_msg:
-                    continue
-                else:
-                    print("driversdict: error - unknown error")
-                    print(err_msg, file=stderr)
-                    break
-        except Exception as e:
-            print(e)
-            break
+        print(f"{n}: #{key!r}#")
+        result = testing_archive(compressed, key)
+        if result is not None:
+            print(f"findout: --- #{key!r}# ---")
     else:
         print("driversdict: warn - 未找到匹配的密码")
 
