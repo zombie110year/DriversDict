@@ -2,6 +2,7 @@ import json
 from argparse import ArgumentParser
 from hashlib import md5
 from pathlib import Path
+from random import shuffle
 from subprocess import PIPE, run
 from sys import exit, stdin
 from typing import *
@@ -9,19 +10,17 @@ from typing import *
 from driversdict.resource import dictionary
 
 from . import DICTIONARY
-from .testing import testing_archive
+from .testing import parallel_testing, simple_testing
 
 
 def cli_main():
     parser = ArgumentParser("drivers-dict")
     command = parser.add_subparsers(title="subcommands", dest="command")
     sort = command.add_parser("sort", description="排序字典中的密码，会剔除重复项")
-    sort.add_argument("-d", "--dictionary", help="指定字典文件", default=DICTIONARY)
     test = command.add_parser("test", description="使用字典中存储的密码逐个尝试解压")
-    test.add_argument("archive", help="specific the archive file to extract")
-    test.add_argument("-d", "--dictionary", help="指定字典文件", default=DICTIONARY)
+    test.add_argument("archive", help="指定要测试的压缩文件")
+    test.add_argument("--parallel", help="是否使用多线程", action="store_true")
     add = command.add_parser("add", description="向字典中添加密码，每行一个，可读取文件或 stdin")
-    add.add_argument("-d", "--dictionary", help="指定字典文件", default=DICTIONARY)
     add.add_argument("INPUT",
                      nargs="?",
                      help="输入文件路径，若留空则从 stdin 读取密码",
@@ -30,11 +29,11 @@ def cli_main():
     args = parser.parse_args()
 
     if "test" == args.command:
-        cli_test(args.archive)
+        cli_test(args.archive, args.parallel)
     elif "sort" == args.command:
-        cli_sort(args.dictionary)
+        cli_sort(DICTIONARY)
     elif "add" == args.command:
-        cli_add(args.dictionary, args.INPUT)
+        cli_add(DICTIONARY, args.INPUT)
     elif "query" == args.command:
         pass
     elif "info" == args.command:
@@ -97,7 +96,7 @@ def deprecated_cli_query(filepath: str):
         raise ValueError(f"无正常响应：{resp.status_code}, {hashcode}")
 
 
-def cli_test(compressed: str):
+def cli_test(archivef: str, parallel: bool):
     """测试解压密码"""
     # 测试 7z 是否存在
     try:
@@ -112,16 +111,18 @@ def cli_test(compressed: str):
         )
         exit(-1)
 
-    for n, key in enumerate(dictionary()):
-        print(f"{n}: #{key!r}#")
-        result = testing_archive(compressed, key)
-        if result is not None:
-            print(f"findout: --- #{key!r}# ---")
+    passwords = dictionary()
+    shuffle(passwords)
+    result = parallel_testing(archivef, passwords) if parallel else simple_testing(archivef, passwords)
+    if result is not None:
+        print(f"findout: --- #{result!r}# ---")
     else:
         print("driversdict: warn - 未找到匹配的密码")
+
 
 def cli_info():
     """向终端输出程序信息"""
     print("NAME: driversdict")
+    print("HOMEPAGE: https://github.com/zombie110year/DriversDict")
     print("DESCRIPTION: 查询、测试、记录「某些压缩包」的解压密码")
     print(f"DICTIONARY: {DICTIONARY!r}")

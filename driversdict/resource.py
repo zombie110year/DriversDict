@@ -1,7 +1,9 @@
-from pathlib import Path
 import pkgutil
+from pathlib import Path
 from typing import List
+
 from . import DICTIONARY
+
 
 def pkg_dictionary() -> List[str]:
     """获得包内 dictionary 的内容
