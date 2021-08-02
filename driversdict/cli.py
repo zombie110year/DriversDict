@@ -1,4 +1,3 @@
-from driversdict.resource import dictionary
 import json
 from argparse import ArgumentParser
 from hashlib import md5
@@ -6,7 +5,10 @@ from pathlib import Path
 from subprocess import DEVNULL, PIPE, run
 from sys import exit, stderr, stdin
 from typing import *
-from . import DICTIONARY
+
+from driversdict.resource import dictionary
+
+from . import DICTIONARY, shell_encoding
 
 
 def cli_main():
@@ -99,7 +101,7 @@ def cli_test(compressed: str):
     # 测试 7z 是否存在
     try:
         # todo 用 ctypes 重构
-        exe7z = run(["7z", "-version"],
+        exe7z = run(["7z"],
                     stdout=PIPE,
                     stderr=PIPE,
                     encoding="utf-8")
@@ -113,18 +115,19 @@ def cli_test(compressed: str):
         try:
             result = run(["7z", "t", f"-p{key}", compressed],
                             stdout=DEVNULL,
-                            stderr=PIPE,
-                            encoding="utf-8")
+                            stderr=PIPE)
             print(f"{n}: #{key!r}#")
             if result.returncode == 0:
                 print(f"findout: --- #{key!r}# ---")
                 break
             else:
-                if "Wrong password" in result.stderr:
+                encoding = shell_encoding()
+                err_msg = result.stderr.decode(encoding)
+                if "Wrong password" in err_msg:
                     continue
                 else:
                     print("driversdict: error - unknown error")
-                    print(result.stderr, file=stderr)
+                    print(err_msg, file=stderr)
                     break
         except Exception as e:
             print(e)
