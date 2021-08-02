@@ -14,7 +14,7 @@ from .testing import parallel_testing, simple_testing
 
 
 def cli_main():
-    parser = ArgumentParser("drivers-dict")
+    parser = ArgumentParser("driversdict")
     command = parser.add_subparsers(title="subcommands", dest="command")
     sort = command.add_parser("sort", description="排序字典中的密码，会剔除重复项")
     test = command.add_parser("test", description="使用字典中存储的密码逐个尝试解压")
