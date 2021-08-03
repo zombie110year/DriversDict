@@ -1,7 +1,9 @@
 from pathlib import Path
 import locale
 
-DICTIONARY = (Path.home() / ".local" / "share" / "driversdict" / "dictionary.txt").as_posix()
+DATAHOME: str = (Path.home() / ".local" / "share" / "driversdict").as_posix()
+DICTIONARY: str = (Path(DATAHOME) / "dictionary.txt").as_posix()
+DATABASE: str = (Path(DATAHOME) / "driversdict.sqlite").as_posix()
 SHELL_ENCODING = None
 
 def shell_encoding():

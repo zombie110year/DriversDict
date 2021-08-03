@@ -8,9 +8,11 @@ readme = "README.md"
 
 [tool.poetry.dependencies]
 python = "^3.9"
+peewee = "^3.14.4"
 
 [tool.poetry.dev-dependencies]
 yapf = "^0.31.0"
+pytest = "^6.2.4"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
@@ -18,3 +20,8 @@ build-backend = "poetry.core.masonry.api"
 
 [tool.poetry.scripts]
 driversdict = "driversdict.cli:cli_main"
+
+[[tool.poetry.source]]
+name = "aliyun"
+url = "https://mirrors.aliyun.com/pypi/simple"
+default = true
