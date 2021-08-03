@@ -1,7 +1,10 @@
-import pytest
-from ..database.model import CertainPassword, QueryJournal, DB
-from peewee import *
 from datetime import date
+
+import pytest
+from peewee import *
+
+from ..database.exchange import query_passwd
+from ..database.model import DB, CertainPassword, QueryJournal
 
 
 @pytest.fixture
@@ -60,3 +63,20 @@ def test_journal(db):
         b'\x98\xa2z\x181u\x0f\xbd*<\xc5\x88\xbf*7#').get()
     assert query.passwd == "你好" and query.date == date(
         1970, 1, 1)
+
+
+def test_query_passwd(db):
+    data1 = CertainPassword(
+        passwd="hello",
+        md5sum=b'o\x02\x03N\xb9\x07!\x16Z\x0e\xaa\xad\xe1\xb8\x86g')
+    data1.save()
+    data2 = CertainPassword(passwd="hello",
+                            md5sum=b'\x98\xa2z\x181u\x0f\xbd*<\xc5\x88\xbf*7#')
+    data2.save()
+    data3 = CertainPassword(
+        passwd="goodbye",
+        md5sum=b'o\x02\x03N\xb9\x07!\x16Z\x0e\xaa\xad\xe1\xb8\x86g')
+    data3.save()
+
+    assert {"hello", "goodbye"} == set(query_passwd(b'o\x02\x03N\xb9\x07!\x16Z\x0e\xaa\xad\xe1\xb8\x86g'))
+    assert [] == query_passwd(b"0123456789012345")
