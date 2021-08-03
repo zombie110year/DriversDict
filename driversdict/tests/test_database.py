@@ -3,7 +3,7 @@ from datetime import date
 import pytest
 from peewee import *
 
-from ..database.exchange import query_passwd
+from ..database.exchange import query_passwd, export_passwd
 from ..database.model import DB, CertainPassword, QueryJournal
 
 
@@ -80,3 +80,22 @@ def test_query_passwd(db):
 
     assert {"hello", "goodbye"} == set(query_passwd(b'o\x02\x03N\xb9\x07!\x16Z\x0e\xaa\xad\xe1\xb8\x86g'))
     assert [] == query_passwd(b"0123456789012345")
+
+def test_export_passwd(db):
+    data1 = CertainPassword(
+        passwd="hello",
+        md5sum=b'o\x02\x03N\xb9\x07!\x16Z\x0e\xaa\xad\xe1\xb8\x86g')
+    data1.save()
+    data2 = CertainPassword(passwd="hello",
+                            md5sum=b'\x98\xa2z\x181u\x0f\xbd*<\xc5\x88\xbf*7#')
+    data2.save()
+    data3 = CertainPassword(
+        passwd="goodbye",
+        md5sum=b'o\x02\x03N\xb9\x07!\x16Z\x0e\xaa\xad\xe1\xb8\x86g')
+    data3.save()
+
+    assert {
+        (b'o\x02\x03N\xb9\x07!\x16Z\x0e\xaa\xad\xe1\xb8\x86g', "hello"),
+        (b'\x98\xa2z\x181u\x0f\xbd*<\xc5\x88\xbf*7#', "hello"),
+        (b'o\x02\x03N\xb9\x07!\x16Z\x0e\xaa\xad\xe1\xb8\x86g', "goodbye"),
+    } == set(export_passwd()["data"])

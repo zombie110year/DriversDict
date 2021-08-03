@@ -1,4 +1,4 @@
-from typing import List, Optional
+from typing import Dict, List, Optional, Tuple, Union
 from .model import QueryJournal, CertainPassword, DB
 from datetime import date
 
@@ -15,3 +15,24 @@ def query_passwd(md5sum: bytes) -> List[str]:
             ], fields=[QueryJournal.md5sum, QueryJournal.passwd, QueryJournal.date])
             action.execute()
     return passwords
+
+
+def export_passwd() -> Dict[str, Union[List[str], List[Tuple[bytes, str]]]]:
+    """将数据库中的密码以 JSON 的形式备份出来
+
+    .. code:: json
+
+        {
+            "fields": ["md5sum", "passwd"],
+            "data": [
+                (b"...", "..."),
+                ...
+            ]
+        }
+    """
+    query = CertainPassword.select(CertainPassword.md5sum, CertainPassword.passwd)
+    data = [(it.md5sum, it.passwd) for it in query]
+    return {
+        "fields": ["md5sum", "passwd"],
+        "data": data
+    }
