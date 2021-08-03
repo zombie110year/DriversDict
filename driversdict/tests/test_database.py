@@ -3,7 +3,7 @@ from datetime import date
 import pytest
 from peewee import *
 
-from ..database.exchange import query_passwd, export_passwd, all_passwords
+from ..database.exchange import query_passwd, export_passwd, all_passwords, add_passwd_certainly
 from ..database.model import DB, CertainPassword, QueryJournal
 
 
@@ -11,7 +11,7 @@ from ..database.model import DB, CertainPassword, QueryJournal
 def db():
     DB.connect(False)
     DB.create_tables([CertainPassword, QueryJournal])
-    yield
+    yield DB
     DB.close()
 
 
@@ -116,3 +116,10 @@ def test_all_passwords(db):
 
     passwords = all_passwords()
     assert {"hello", "goodbye"} == {it for it in passwords}
+
+
+def test_add_passwd_certainly(db):
+    assert True == add_passwd_certainly(b'o\x02\x03N\xb9\x07!\x16Z\x0e\xaa\xad\xe1\xb8\x86g', "goodbye")
+    db.close()
+    db.connect()
+    assert False == add_passwd_certainly(b'o\x02\x03N\xb9\x07!\x16Z\x0e\xaa\xad\xe1\xb8\x86g', "goodbye")

@@ -44,3 +44,13 @@ def all_passwords() -> List[str]:
     query = CertainPassword.select(CertainPassword.passwd)
     passwords = [it.passwd for it in query]
     return passwords
+
+
+def add_passwd_certainly(md5sum: bytes, passwd: str):
+    """插入一条确定的密码，成功返回 True，如果已经存在，则不会插入并返回 False
+    """
+    _, created = CertainPassword.get_or_create(
+        md5sum=md5sum,
+        passwd=passwd
+    )
+    return created
