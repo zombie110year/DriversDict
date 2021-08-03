@@ -5,21 +5,11 @@
 """
 
 from peewee import *
-from ..resource import database_file
-
-import os
 
 __all__ = ["CertainPassword", "QueryJournal", "DB"]
 
-# TESTING = True if os.getenv("TESTING") else False
-TESTING = False
 
-if not TESTING:
-    DB = SqliteDatabase(database_file())
-else:
-    print("TESTING MODE")
-    DB = SqliteDatabase(":memory:")
-
+DB = DatabaseProxy()
 
 class CertainPassword(Model):
     "能直接通过 MD5 查询的密码"

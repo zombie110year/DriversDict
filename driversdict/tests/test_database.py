@@ -1,14 +1,20 @@
+from binascii import hexlify
 from datetime import date
+from random import randbytes
 
 import pytest
 from peewee import *
 
-from ..database.exchange import query_passwd, export_passwd, all_passwords, add_passwd_certainly
+from ..database.exchange import (add_passwd_certainly, all_passwords,
+                                 export_passwd, query_passwd)
 from ..database.model import DB, CertainPassword, QueryJournal
 
 
 @pytest.fixture
 def db():
+    DB.initialize(
+        SqliteDatabase(
+            f"debug-{hexlify(randbytes(4)).decode('utf-8')!s}.sqlite"))
     DB.connect(False)
     DB.create_tables([CertainPassword, QueryJournal])
     yield DB
@@ -61,8 +67,7 @@ def test_journal(db):
     query = QueryJournal.select().where(
         QueryJournal.md5sum ==
         b'\x98\xa2z\x181u\x0f\xbd*<\xc5\x88\xbf*7#').get()
-    assert query.passwd == "你好" and query.date == date(
-        1970, 1, 1)
+    assert query.passwd == "你好" and query.date == date(1970, 1, 1)
 
 
 def test_query_passwd(db):
@@ -78,8 +83,10 @@ def test_query_passwd(db):
         md5sum=b'o\x02\x03N\xb9\x07!\x16Z\x0e\xaa\xad\xe1\xb8\x86g')
     data3.save()
 
-    assert {"hello", "goodbye"} == set(query_passwd(b'o\x02\x03N\xb9\x07!\x16Z\x0e\xaa\xad\xe1\xb8\x86g'))
+    assert {"hello", "goodbye"} == set(
+        query_passwd(b'o\x02\x03N\xb9\x07!\x16Z\x0e\xaa\xad\xe1\xb8\x86g'))
     assert [] == query_passwd(b"0123456789012345")
+
 
 def test_export_passwd(db):
     data1 = CertainPassword(
@@ -119,7 +126,9 @@ def test_all_passwords(db):
 
 
 def test_add_passwd_certainly(db):
-    assert True == add_passwd_certainly(b'o\x02\x03N\xb9\x07!\x16Z\x0e\xaa\xad\xe1\xb8\x86g', "goodbye")
+    assert True == add_passwd_certainly(
+        b'o\x02\x03N\xb9\x07!\x16Z\x0e\xaa\xad\xe1\xb8\x86g', "goodbye")
     db.close()
     db.connect()
-    assert False == add_passwd_certainly(b'o\x02\x03N\xb9\x07!\x16Z\x0e\xaa\xad\xe1\xb8\x86g', "goodbye")
+    assert False == add_passwd_certainly(
+        b'o\x02\x03N\xb9\x07!\x16Z\x0e\xaa\xad\xe1\xb8\x86g', "goodbye")
