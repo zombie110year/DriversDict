@@ -36,3 +36,11 @@ def export_passwd() -> Dict[str, Union[List[str], List[Tuple[bytes, str]]]]:
         "fields": ["md5sum", "passwd"],
         "data": data
     }
+
+
+def all_passwords() -> List[str]:
+    """提取所有密码，以便合并入字典
+    """
+    query = CertainPassword.select(CertainPassword.passwd)
+    passwords = [it.passwd for it in query]
+    return passwords

@@ -3,7 +3,7 @@ from datetime import date
 import pytest
 from peewee import *
 
-from ..database.exchange import query_passwd, export_passwd
+from ..database.exchange import query_passwd, export_passwd, all_passwords
 from ..database.model import DB, CertainPassword, QueryJournal
 
 
@@ -99,3 +99,20 @@ def test_export_passwd(db):
         (b'\x98\xa2z\x181u\x0f\xbd*<\xc5\x88\xbf*7#', "hello"),
         (b'o\x02\x03N\xb9\x07!\x16Z\x0e\xaa\xad\xe1\xb8\x86g', "goodbye"),
     } == set(export_passwd()["data"])
+
+
+def test_all_passwords(db):
+    data1 = CertainPassword(
+        passwd="hello",
+        md5sum=b'o\x02\x03N\xb9\x07!\x16Z\x0e\xaa\xad\xe1\xb8\x86g')
+    data1.save()
+    data2 = CertainPassword(passwd="hello",
+                            md5sum=b'\x98\xa2z\x181u\x0f\xbd*<\xc5\x88\xbf*7#')
+    data2.save()
+    data3 = CertainPassword(
+        passwd="goodbye",
+        md5sum=b'o\x02\x03N\xb9\x07!\x16Z\x0e\xaa\xad\xe1\xb8\x86g')
+    data3.save()
+
+    passwords = all_passwords()
+    assert {"hello", "goodbye"} == {it for it in passwords}
