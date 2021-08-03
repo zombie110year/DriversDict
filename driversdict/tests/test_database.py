@@ -6,7 +6,7 @@ import pytest
 from peewee import *
 
 from ..database.exchange import (add_passwd_certainly, all_passwords,
-                                 export_passwd, query_passwd)
+                                 export_passwd, query_passwd, import_passwords)
 from ..database.model import DB, CertainPassword, QueryJournal
 
 
@@ -132,3 +132,33 @@ def test_add_passwd_certainly(db):
     db.connect()
     assert False == add_passwd_certainly(
         b'o\x02\x03N\xb9\x07!\x16Z\x0e\xaa\xad\xe1\xb8\x86g', "goodbye")
+
+
+@pytest.fixture
+def db_test_import():
+    DB.initialize(
+        SqliteDatabase(
+            f"debug-{hexlify(randbytes(4)).decode('utf-8')!s}-testimport.sqlite"
+        ))
+    DB.connect(False)
+    DB.create_tables([CertainPassword, QueryJournal])
+    with DB.atomic() as preload:
+        CertainPassword.insert(
+            md5sum=b'o\x02\x03N\xb9\x07!\x16Z\x0e\xaa\xad\xe1\xb8\x86g',
+            passwd="hello").execute()
+        preload.commit()
+    yield DB
+    DB.close()
+
+
+def test_import_passwords(db_test_import):
+    import_data = {
+        "fields": ["md5sum", "passwd"],
+        "data": [
+            (b'o\x02\x03N\xb9\x07!\x16Z\x0e\xaa\xad\xe1\xb8\x86g', "hello"),
+            (b'\x98\xa2z\x181u\x0f\xbd*<\xc5\x88\xbf*7#', "goodbye"),
+            (b'\x98\xa2z\x181u\x0f\xbd*<\xc5\x88\xbf*7#', "hello"),
+        ]
+    }
+
+    assert 2 == import_passwords(import_data)
